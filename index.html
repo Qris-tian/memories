@@ -155,6 +155,24 @@
       from {opacity: 0; transform: scale(0.95);}
       to {opacity: 1; transform: scale(1);}
     }
+
+    /* === LIGHTBOX === */
+    #lightbox {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 9998;
+    }
+
+    #lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
   </style>
 </head>
 
@@ -172,6 +190,11 @@
     <button data-action="delete">Hapus</button>
   </div>
 
+  <!-- Lightbox -->
+  <div id="lightbox">
+    <img id="lightboxImg" src="">
+  </div>
+
   <input type="file" id="fileInput" accept="image/*">
   <button class="add-btn" id="addBtn">+</button>
 
@@ -180,6 +203,8 @@
     const fileInput = document.getElementById('fileInput');
     const addBtn = document.getElementById('addBtn');
     const contextMenu = document.getElementById('contextMenu');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
     let selectedIndex = null;
 
     let photos = JSON.parse(localStorage.getItem('victornzPhotos')) || [];
@@ -219,6 +244,12 @@
           contextMenu.style.left = `${e.pageX}px`;
         });
 
+        // klik kiri => lightbox
+        container.addEventListener('click', () => {
+          lightboxImg.src = photo.url;
+          lightbox.style.display = 'flex';
+        });
+
         gallery.appendChild(container);
       });
 
@@ -228,6 +259,11 @@
     // Tutup menu jika klik di luar
     document.addEventListener('click', () => {
       contextMenu.style.display = 'none';
+    });
+
+    // Tutup lightbox jika klik overlay
+    lightbox.addEventListener('click', () => {
+      lightbox.style.display = 'none';
     });
 
     // Menu konteks handler
@@ -251,12 +287,20 @@
 
     function updateLines() {
       document.querySelectorAll('.line').forEach(line => line.remove());
+
       const start = parseInt(getComputedStyle(gallery).getPropertyValue('--line-start'));
       const gap = parseInt(getComputedStyle(gallery).getPropertyValue('--line-gap'));
       const photosPerRow = 2;
       const totalRows = Math.ceil(photos.length / photosPerRow);
 
       for (let i = 0; i < totalRows; i++) {
+        const startIndex = i * photosPerRow;
+        const endIndex = Math.min(startIndex + photosPerRow, photos.length);
+        const rowPhotos = photos.slice(startIndex, endIndex);
+
+        // Jika hanya 1 foto di baris ini, lewati pembuatan garis
+        if (rowPhotos.length < 2) continue;
+
         const line = document.createElement('div');
         line.className = 'line';
         line.style.top = `${start + i * gap}px`;
