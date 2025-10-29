@@ -35,7 +35,7 @@
       background-color: red;
       left: 26%;
       width: 48%;
-      z-index: 1; /* di atas foto, di bawah pin */
+      z-index: 1;
       border-radius: 5px;
       transition: top 0.3s ease;
     }
@@ -123,7 +123,7 @@
       display: none;
     }
 
-    /* === MENU KLIK KANAN === */
+    /* Menu klik kanan */
     .context-menu {
       position: absolute;
       display: none;
@@ -156,7 +156,7 @@
       to {opacity: 1; transform: scale(1);}
     }
 
-    /* === LIGHTBOX === */
+    /* Lightbox */
     #lightbox {
       display: none;
       position: fixed;
@@ -207,6 +207,11 @@
     const lightboxImg = document.getElementById('lightboxImg');
     let selectedIndex = null;
 
+    // --- GANTI INI DENGAN TOKEN & REPO ANDA ---
+    const githubToken = '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';
+    const githubRepo = 'Qris-tian/memories';
+    const branch = 'main'; // bisa diganti master jika repo pakai master
+
     let photos = JSON.parse(localStorage.getItem('victornzPhotos')) || [];
 
     function renderPhotos() {
@@ -235,7 +240,6 @@
         container.appendChild(title);
         container.appendChild(date);
 
-        // klik kanan => menu konteks
         container.addEventListener('contextmenu', (e) => {
           e.preventDefault();
           selectedIndex = index;
@@ -244,7 +248,6 @@
           contextMenu.style.left = `${e.pageX}px`;
         });
 
-        // klik kiri => lightbox
         container.addEventListener('click', () => {
           lightboxImg.src = photo.url;
           lightbox.style.display = 'flex';
@@ -252,30 +255,23 @@
 
         gallery.appendChild(container);
       });
-
       setTimeout(updateLines, 100);
     }
 
-    // Tutup menu jika klik di luar
     document.addEventListener('click', () => {
       contextMenu.style.display = 'none';
     });
 
-    // Tutup lightbox jika klik overlay
     lightbox.addEventListener('click', () => {
       lightbox.style.display = 'none';
     });
 
-    // Menu konteks handler
     contextMenu.addEventListener('click', (e) => {
       if (!e.target.dataset.action) return;
       const action = e.target.dataset.action;
-
-      if (action === 'rename') {
-        editPhoto(selectedIndex);
-      } else if (action === 'change') {
-        changePhoto(selectedIndex);
-      } else if (action === 'delete') {
+      if (action === 'rename') editPhoto(selectedIndex);
+      else if (action === 'change') changePhoto(selectedIndex);
+      else if (action === 'delete') {
         if (confirm('Yakin ingin menghapus foto ini?')) {
           photos.splice(selectedIndex, 1);
           localStorage.setItem('victornzPhotos', JSON.stringify(photos));
@@ -287,7 +283,6 @@
 
     function updateLines() {
       document.querySelectorAll('.line').forEach(line => line.remove());
-
       const start = parseInt(getComputedStyle(gallery).getPropertyValue('--line-start'));
       const gap = parseInt(getComputedStyle(gallery).getPropertyValue('--line-gap'));
       const photosPerRow = 2;
@@ -297,36 +292,13 @@
         const startIndex = i * photosPerRow;
         const endIndex = Math.min(startIndex + photosPerRow, photos.length);
         const rowPhotos = photos.slice(startIndex, endIndex);
-
-        // Jika hanya 1 foto di baris ini, lewati pembuatan garis
         if (rowPhotos.length < 2) continue;
-
         const line = document.createElement('div');
         line.className = 'line';
         line.style.top = `${start + i * gap}px`;
         gallery.appendChild(line);
       }
     }
-
-    addBtn.onclick = () => fileInput.click();
-
-    fileInput.onchange = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const newPhoto = {
-            url: event.target.result,
-            title: prompt('Masukkan judul foto:') || 'Tanpa Judul',
-            date: new Date().toLocaleDateString()
-          };
-          photos.push(newPhoto);
-          localStorage.setItem('victornzPhotos', JSON.stringify(photos));
-          renderPhotos();
-        };
-        reader.readAsDataURL(file);
-      }
-    };
 
     function editPhoto(index) {
       const photo = photos[index];
@@ -344,18 +316,68 @@
       input.accept = 'image/*';
       input.onchange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            photos[index].url = event.target.result;
-            localStorage.setItem('victornzPhotos', JSON.stringify(photos));
-            renderPhotos();
-          };
-          reader.readAsDataURL(file);
-        }
+        if (file) uploadAndAddPhoto(file, index);
       };
       input.click();
     }
+
+    // --- FUNGSI UPLOAD KE GITHUB ---
+    async function uploadToGitHub(file, fileName) {
+      const content = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(content).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+
+      const url = `https://api.github.com/repos/${githubRepo}/contents/${fileName}`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${githubToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Add ${fileName}`,
+          content: base64,
+          branch: branch
+        })
+      });
+
+      const result = await response.json();
+      if (result.content && result.content.download_url) return result.content.download_url;
+      else throw new Error('Upload gagal');
+    }
+
+    // --- TAMBAH FOTO BARU ---
+    async function uploadAndAddPhoto(file, index=null) {
+      const title = prompt('Masukkan judul foto:') || 'Tanpa Judul';
+      const fileName = `image(${Date.now()}).jpg`;
+
+      try {
+        const githubUrl = await uploadToGitHub(file, fileName);
+        const newPhoto = {
+          url: githubUrl,
+          title: title,
+          date: new Date().toLocaleDateString()
+        };
+
+        if (index !== null) photos[index] = newPhoto;
+        else photos.push(newPhoto);
+
+        localStorage.setItem('victornzPhotos', JSON.stringify(photos));
+        renderPhotos();
+        alert('Upload sukses!');
+      } catch(err) {
+        console.error(err);
+        alert('Upload gagal!');
+      }
+    }
+
+    addBtn.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) uploadAndAddPhoto(file);
+    };
 
     renderPhotos();
   </script>
