@@ -136,7 +136,7 @@
   <button class="add-btn" id="addBtn">+</button>
 
   <script>
-    const API_KEY = "2328fd3488b28a717bfb8c27107a98bd"; // pastikan dari imgbb API Key benar
+    const API_KEY = "2328fd3488b28a717bfb8c27107a98bd"; 
     const gallery = document.getElementById('gallery');
     const fileInput = document.getElementById('fileInput');
     const addBtn = document.getElementById('addBtn');
@@ -183,7 +183,7 @@
 
     addBtn.addEventListener('click', () => fileInput.click());
 
-    // Upload ke ImgBB
+    // ✅ Upload ke ImgBB (fix versi)
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -198,10 +198,11 @@
         });
 
         const data = await response.json();
+        console.log(data); // biar bisa dicek di console
 
-        if (data.success && data.data && data.data.url) {
+        if (data.success && data.data && data.data.display_url) {
           const newPhoto = {
-            url: data.data.url,
+            url: data.data.display_url, // 🔥 fix di sini
             title: prompt("Masukkan judul foto:") || "Tanpa Judul",
             date: new Date().toLocaleDateString()
           };
