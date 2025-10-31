@@ -133,7 +133,6 @@
       box-shadow: 0 3px 10px rgba(0,0,0,0.2);
       z-index: 9999;
       overflow: hidden;
-      animation: fadeIn 0.15s ease;
     }
 
     .context-menu button {
@@ -148,11 +147,6 @@
 
     .context-menu button:hover {
       background-color: #eee;
-    }
-
-    @keyframes fadeIn {
-      from {opacity: 0; transform: scale(0.95);}
-      to {opacity: 1; transform: scale(1);}
     }
 
     #lightbox {
@@ -172,17 +166,6 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
 
-    /* small helper for debug output (optional) */
-    .debug {
-      font-family: monospace;
-      white-space: pre-wrap;
-      background: rgba(255,255,255,0.9);
-      color: #111;
-      padding: 8px;
-      border-radius: 6px;
-      margin: 8px;
-      max-width: 95%;
-    }
   </style>
 </head>
 <body>
@@ -205,22 +188,19 @@
   <input type="file" id="fileInput" accept="image/*">
   <button class="add-btn" id="addBtn">+</button>
 
-  <!-- optional debug area (visible if you want) -->
-  <div id="debugArea" class="debug" style="display:none"></div>
-
   <script>
-    const API_KEY = "2328fd3488b28a717bfb8c27107a98bd"; // <-- GANTI DENGAN API KEY IMGBB MU (tanpa spasi)
+    const API_KEY = "2328fd3488b28a717bfb8c27107a98bd";
     const gallery = document.getElementById('gallery');
     const fileInput = document.getElementById('fileInput');
     const addBtn = document.getElementById('addBtn');
     const contextMenu = document.getElementById('contextMenu');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
-    const debugArea = document.getElementById('debugArea');
 
     let selectedIndex = null;
     let photos = JSON.parse(localStorage.getItem('victornzPhotos')) || [];
 
+    // Render foto ke galeri
     function renderPhotos() {
       gallery.innerHTML = '';
       photos.forEach((photo, index) => {
@@ -236,7 +216,7 @@
 
         const title = document.createElement('div');
         title.className = 'photo-title';
-        title.textContent = photo.title || 'Judul Foto';
+        title.textContent = photo.title || 'Tanpa Judul';
 
         const date = document.createElement('div');
         date.className = 'photo-date';
@@ -262,7 +242,6 @@
 
         gallery.appendChild(container);
       });
-      setTimeout(updateLines, 100);
     }
 
     document.addEventListener('click', () => {
@@ -289,45 +268,12 @@
       contextMenu.style.display = 'none';
     });
 
-    function updateLines() {
-      document.querySelectorAll('.line').forEach(line => line.remove());
-      const start = parseInt(getComputedStyle(gallery).getPropertyValue('--line-start')) || 26;
-      const gap = parseInt(getComputedStyle(gallery).getPropertyValue('--line-gap')) || 168;
-      const photosPerRow = 2;
-      const totalRows = Math.ceil(photos.length / photosPerRow);
-
-      for (let i = 0; i < totalRows; i++) {
-        const startIndex = i * photosPerRow;
-        const endIndex = Math.min(startIndex + photosPerRow, photos.length);
-        const rowPhotos = photos.slice(startIndex, endIndex);
-        if (rowPhotos.length < 2) continue;
-
-        const line = document.createElement('div');
-        line.className = 'line';
-        line.style.top = `${start + i * gap}px`;
-        gallery.appendChild(line);
-      }
-    }
-
     addBtn.addEventListener('click', () => fileInput.click());
 
-    // helper untuk debug (opsional)
-    function debug(msg, show = true) {
-      console.log(msg);
-      if (!debugArea) return;
-      if (show) {
-        debugArea.style.display = 'block';
-        debugArea.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2);
-      }
-    }
-
-    // === Upload ke ImgBB (mengirim file/Blob) ===
+    // Upload ke ImgBB
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
-      // optional: small filesize guard
-      // if (file.size > 32 * 1024 * 1024) { alert("File terlalu besar (>32MB)"); return; }
 
       const formData = new FormData();
       formData.append("image", file);
@@ -339,41 +285,34 @@
         });
 
         const data = await response.json();
-        debug(data, true); // tampilkan respons (bisa dimatikan)
-
-        // periksa hasil: pastikan ada data.data.url
-        if (response.ok && data && data.data && data.data.url) {
+        if (data.success && data.data && data.data.url) {
           const newPhoto = {
             url: data.data.url,
-            title: prompt('Masukkan judul foto:') || 'Tanpa Judul',
+            title: prompt("Masukkan judul foto:") || "Tanpa Judul",
             date: new Date().toLocaleDateString()
           };
           photos.push(newPhoto);
-          localStorage.setItem('victornzPhotos', JSON.stringify(photos));
+          localStorage.setItem("victornzPhotos", JSON.stringify(photos));
           renderPhotos();
         } else {
-          alert("Gagal upload ke ImgBB:\n" + (data?.error?.message || JSON.stringify(data)));
+          alert("Upload gagal! Coba lagi.\n\n" + (data.error?.message || JSON.stringify(data)));
         }
       } catch (err) {
-        alert("Terjadi kesalahan saat upload: " + err.message);
-        console.error(err);
+        alert("Terjadi kesalahan: " + err.message);
       } finally {
-        // reset input agar event onchange bisa dipicu lagi untuk file yang sama
         fileInput.value = "";
       }
     };
 
     function editPhoto(index) {
-      const photo = photos[index];
-      const newTitle = prompt('Ubah judul foto:', photo.title);
+      const newTitle = prompt('Ubah judul foto:', photos[index].title);
       if (newTitle !== null) {
-        photo.title = newTitle;
+        photos[index].title = newTitle;
         localStorage.setItem('victornzPhotos', JSON.stringify(photos));
         renderPhotos();
       }
     }
 
-    // ganti foto: upload file baru ke ImgBB lalu ganti url
     function changePhoto(index) {
       const input = document.createElement('input');
       input.type = 'file';
@@ -391,34 +330,22 @@
             body: formData
           });
           const data = await response.json();
-          debug(data, true);
 
-          if (response.ok && data && data.data && data.data.url) {
+          if (data.success && data.data && data.data.url) {
             photos[index].url = data.data.url;
             localStorage.setItem('victornzPhotos', JSON.stringify(photos));
             renderPhotos();
           } else {
-            alert("Gagal mengganti gambar:\n" + (data?.error?.message || JSON.stringify(data)));
-            console.error(data);
+            alert("Gagal mengganti foto!");
           }
         } catch (err) {
-          alert("Terjadi kesalahan saat mengganti gambar: " + err.message);
-          console.error(err);
-        } finally {
-          input.value = "";
+          alert("Kesalahan: " + err.message);
         }
       };
       input.click();
     }
 
-    // inisialisasi render
     renderPhotos();
-
-    // update garis/pin jika ukuran viewport berubah
-    window.addEventListener('resize', () => {
-      setTimeout(updateLines, 100);
-    });
-
   </script>
 </body>
 </html>
