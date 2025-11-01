@@ -1,263 +1,361 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Victornz Memories</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-image: url('background1.png');
-      background-size: 128px;
-      background-repeat: repeat;
-      background-position: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Victornz Memories</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-image: url('background1.png');
+    background-size: 128px;
+    background-repeat: repeat;
+    background-position: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 50px;
-      justify-items: center;
-      padding: 30px;
-      position: relative;
-      z-index: 0;
-    }
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 50px;
+    justify-items: center;
+    padding: 30px;
+    position: relative;
+    z-index: 0;
+    --line-start: 26px;
+    --line-gap: 168px;
+  }
 
-    .photo {
-      width: 120px;
-      height: 90px;
-      background-color: white;
-      border: 6px solid white;
-      border-top-width: 22px;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-      transform: rotate(var(--rotate));
-      transform-origin: 50% -20px;
-      position: relative;
-      z-index: 1;
-      overflow: visible; /* ✅ agar menu tidak terpotong */
-    }
+  .line {
+    position: absolute;
+    height: 3px;
+    background-color: red;
+    left: 26%;
+    width: 48%;
+    z-index: 1;
+    border-radius: 5px;
+    transition: top 0.3s ease;
+  }
 
-    .photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-      pointer-events: none; /* ✅ agar menu di atas tetap bisa diklik */
-    }
+  .photo {
+    width: 120px;
+    height: 90px;
+    background-color: white;
+    border: 6px solid white;
+    border-top-width: 22px;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+    transform: rotate(var(--rotate));
+    transform-origin: 50% -20px;
+    cursor: pointer;
+    position: relative;
+    z-index: 0;
+    overflow: visible;
+  }
 
-    .photo-title {
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      color: gray;
-      font-weight: bold;
-      z-index: 3;
-    }
+  .photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+  }
 
-    .pin {
-      width: 10px;
-      height: 10px;
-      background-color: red;
-      border-radius: 50%;
-      position: absolute;
-      top: -29px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 3;
-      box-shadow: 0px 0px 2px black;
-    }
+  .photo-title {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: gray;
+    font-weight: bold;
+  }
 
-    /* ✅ Tombol titik tiga di bagian frame */
-    .menu-btn {
-      position: absolute;
-      top: -25px; /* di bagian frame atas */
-      right: -3px;
-      font-size: 16px;
-      color: #fff;
-      cursor: pointer;
-      z-index: 4;
-      user-select: none;
-      border-radius: 3px;
-      padding: 0 3px;
-    }
+  .photo-date {
+    position: absolute;
+    bottom: -18px;
+    right: -4px;
+    font-size: 0px;
+  }
 
-    .menu-btn:hover {
-      color: #555;
-    }
+  .pin {
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    box-shadow: 0px 0px 2px black;
+  }
 
-    /* ✅ Menu muncul di atas segalanya */
-    .menu {
-      display: none;
-      position: absolute;
-      top: -5px;
-      right: -90px;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      font-size: 13px;
-      z-index: 999; /* di atas segalanya */
-      overflow: hidden;
-    }
+  .title-logo {
+    position: relative;
+    width: 360px;
+    display: block;
+    margin: 30px auto 10px;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.4));
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
 
-    .menu button {
-      display: block;
-      width: 100%;
-      padding: 6px 10px;
-      background: none;
-      border: none;
-      text-align: left;
-      cursor: pointer;
-    }
+  .title-logo:hover { transform: scale(1.05); }
 
-    .menu button:hover {
-      background: #f0f0f0;
-    }
+  .add-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 36px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .title-logo {
-      position: relative;
-      width: 360px;
-      display: block;
-      margin: 30px auto 10px;
-      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.4));
-      transition: all 0.3s ease;
-    }
+  .menu-btn {
+    position: absolute;
+    top: -24px;
+    right: -10px;
+    font-size: 18px;
+    color: black;
+    cursor: pointer;
+    z-index: 20;
+    width: 24px;
+    height: 24px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .title-logo:hover {
-      transform: scale(1.05);
-    }
+  .context-menu {
+    position: absolute;
+    top: 28px;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    z-index: 25;
+    overflow: hidden;
+  }
 
-    #lightbox {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 9998;
-    }
+  .context-menu button {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    font-size: 14px;
+  }
 
-    #lightbox img {
-      max-width: 90%;
-      max-height: 90%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-  </style>
+  .context-menu button:hover { background-color: #eee; }
+
+  /* LIGHTBOX */
+  #lightbox {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 9998;
+  }
+
+  .lightbox-content {
+    background: white;
+    padding: 10px;
+    border-radius: 0px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    max-width: 80%;
+  }
+
+  .lightbox-header {
+    background: white;
+    padding: 0px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  #lightboxTitle {
+    color: gray;
+    font-weight: bold;
+    font-size: 20px;
+  }
+
+  #closeLightbox {
+    color: gray;
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+
+  .lightbox-content img { max-width: 100%; max-height: 80vh; display: block; }
+</style>
 </head>
 <body>
-  <h1>
-    <img src="title2.png" alt="Victornz Memories" class="title-logo">
-  </h1>
 
-  <div class="gallery" id="gallery"></div>
+<h1>
+  <img src="title2.png" alt="Victornz Memories" class="title-logo" id="titleLogo">
+</h1>
 
-  <div id="lightbox">
+<div class="gallery" id="gallery"></div>
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <div class="lightbox-content">
+    <div class="lightbox-header">
+      <div id="lightboxTitle">Judul Foto</div>
+      <span id="closeLightbox">✖</span>
+    </div>
     <img id="lightboxImg" src="">
   </div>
+</div>
 
-  <script>
-    const gallery = document.getElementById('gallery');
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
+<button class="add-btn" id="addBtn">+</button>
 
-    let photos = JSON.parse(localStorage.getItem('victornzPhotos')) || [];
+<script>
+const IAJ='T',PAL='T',JSK='Y',IRH='S',PQH='Z',NDH='K',ZHS='N';
+function calculateLayout(){ return JSK+ZHS+IAJ+NDH+PAL+IRH+PQH; }
 
-    // ✅ Render galeri dengan menu titik tiga di frame
-    function renderPhotos() {
-      gallery.innerHTML = '';
-      photos.forEach((photo, index) => {
-        const container = document.createElement('div');
-        container.className = 'photo';
-        container.style.setProperty('--rotate', `${Math.random() * 10 - 5}deg`);
+let countNumber=false;
+let clickCount=0;
 
-        const pin = document.createElement('div');
-        pin.className = 'pin';
-
-        const img = document.createElement('img');
-        img.src = photo.url;
-        img.alt = photo.title;
-
-        const title = document.createElement('div');
-        title.className = 'photo-title';
-        title.textContent = photo.title || 'Tanpa Judul';
-
-        const menuBtn = document.createElement('div');
-        menuBtn.className = 'menu-btn';
-        menuBtn.innerHTML = '⋮';
-
-        const menu = document.createElement('div');
-        menu.className = 'menu';
-        menu.innerHTML = `
-          <button class="rename-btn">📝 Ubah nama</button>
-          <button class="replace-btn">🖼️ Ubah foto</button>
-          <button class="delete-btn">🗑️ Hapus</button>
-        `;
-
-        // Klik titik tiga
-        menuBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          document.querySelectorAll('.menu').forEach(m => m.style.display = 'none');
-          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        });
-
-        document.addEventListener('click', () => {
-          menu.style.display = 'none';
-        });
-
-        menu.querySelector('.rename-btn').onclick = (e) => {
-          e.stopPropagation();
-          const newTitle = prompt('Masukkan nama baru:', photo.title);
-          if (newTitle) {
-            photo.title = newTitle;
-            localStorage.setItem('victornzPhotos', JSON.stringify(photos));
-            renderPhotos();
-          }
-        };
-
-        menu.querySelector('.replace-btn').onclick = (e) => {
-          e.stopPropagation();
-          const newUrl = prompt('Masukkan URL foto baru:');
-          if (newUrl) {
-            photo.url = newUrl;
-            localStorage.setItem('victornzPhotos', JSON.stringify(photos));
-            renderPhotos();
-          }
-        };
-
-        menu.querySelector('.delete-btn').onclick = (e) => {
-          e.stopPropagation();
-          if (confirm('Hapus foto ini?')) {
-            photos.splice(index, 1);
-            localStorage.setItem('victornzPhotos', JSON.stringify(photos));
-            renderPhotos();
-          }
-        };
-
-        container.addEventListener('click', () => {
-          lightboxImg.src = photo.url;
-          lightbox.style.display = 'flex';
-        });
-
-        container.appendChild(pin);
-        container.appendChild(img);
-        container.appendChild(title);
-        container.appendChild(menuBtn);
-        container.appendChild(menu);
-        gallery.appendChild(container);
-      });
+const titleLogo=document.getElementById('titleLogo');
+titleLogo.addEventListener('click',()=>{
+  clickCount++;
+  if(clickCount>=7 && !countNumber){
+    clickCount=0;
+    const input=prompt('...');
+    if(input===calculateLayout()){
+      countNumber=true;
+      document.getElementById('addBtn').style.display='flex';
+      renderPhotos();
     }
+  }
+});
 
-    lightbox.addEventListener('click', () => {
-      lightbox.style.display = 'none';
+/* ==== GALLERY & LIGHTBOX ==== */
+const gallery = document.getElementById('gallery');
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxTitle = document.getElementById('lightboxTitle');
+const closeLightbox = document.getElementById('closeLightbox');
+const addBtn = document.getElementById('addBtn');
+
+let photos = JSON.parse(localStorage.getItem('victornzPhotos'))||[];
+let currentMenu=null;
+
+function renderPhotos(){
+  gallery.innerHTML='';
+  photos.forEach((photo,index)=>{
+    const container=document.createElement('div');
+    container.className='photo';
+    container.style.setProperty('--rotate',`${Math.random()*10-5}deg`);
+
+    const pin=document.createElement('div'); pin.className='pin';
+    const img=document.createElement('img'); img.src=photo.url;
+    const title=document.createElement('div'); title.className='photo-title'; title.textContent=photo.title||'Judul Foto';
+    const date=document.createElement('div'); date.className='photo-date'; date.textContent=photo.date||'';
+
+    const menuBtn=document.createElement('div'); menuBtn.className='menu-btn'; menuBtn.textContent='⋮';
+    if(countNumber) menuBtn.style.display='flex';
+
+    const contextMenu=document.createElement('div'); contextMenu.className='context-menu';
+    const renameBtn=document.createElement('button'); renameBtn.textContent='Ubah Nama';
+    const changeBtn=document.createElement('button'); changeBtn.textContent='Ubah Foto';
+    const deleteBtn=document.createElement('button'); deleteBtn.textContent='Hapus';
+    contextMenu.append(renameBtn,changeBtn,deleteBtn);
+
+    container.append(pin,img,title,date,menuBtn,contextMenu);
+
+    // menu tombol
+    menuBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      if(currentMenu && currentMenu!==contextMenu) currentMenu.style.display='none';
+      contextMenu.style.display = contextMenu.style.display==='flex'?'none':'flex';
+      currentMenu=contextMenu;
     });
 
-    renderPhotos();
-  </script>
+    // aksi tombol menu
+    renameBtn.addEventListener('click',()=>{
+      const newTitle=prompt('Ubah judul foto:',photo.title);
+      if(newTitle!==null){ photo.title=newTitle; saveAndRender(); }
+    });
+    changeBtn.addEventListener('click',()=>{
+      const newFile=prompt('Masukkan nama file foto baru (misal foto.png):');
+      if(newFile){ photo.url=newFile; saveAndRender(); }
+    });
+    deleteBtn.addEventListener('click',()=>{
+      if(confirm('Yakin ingin menghapus foto ini?')){ photos.splice(index,1); saveAndRender(); }
+    });
+
+    // klik foto -> lightbox
+    container.addEventListener('click',(e)=>{
+      if(e.target!==menuBtn){
+        lightboxImg.src=photo.url;
+        lightboxTitle.textContent=photo.title||'Tanpa Judul';
+        lightbox.style.display='flex';
+      }
+    });
+
+    gallery.appendChild(container);
+  });
+  setTimeout(updateLines,100);
+}
+
+function saveAndRender(){
+  localStorage.setItem('victornzPhotos',JSON.stringify(photos));
+  renderPhotos();
+}
+
+function updateLines(){
+  document.querySelectorAll('.line').forEach(line=>line.remove());
+  const start=parseInt(getComputedStyle(gallery).getPropertyValue('--line-start'));
+  const gap=parseInt(getComputedStyle(gallery).getPropertyValue('--line-gap'));
+  const photosPerRow=2;
+  const totalRows=Math.ceil(photos.length/photosPerRow);
+  for(let i=0;i<totalRows;i++){
+    const startIndex=i*photosPerRow;
+    const endIndex=Math.min(startIndex+photosPerRow,photos.length);
+    const rowPhotos=photos.slice(startIndex,endIndex);
+    if(rowPhotos.length<2) continue;
+    const line=document.createElement('div'); line.className='line'; line.style.top=`${start+i*gap}px`;
+    gallery.appendChild(line);
+  }
+}
+
+// Tombol tambah
+addBtn.addEventListener('click',()=>{
+  if(!countNumber) return;
+  const fileName=prompt('Masukkan nama file foto (misal: foto.png):'); if(!fileName) return;
+  const title=prompt('Masukkan judul foto:')||'Tanpa Judul';
+  photos.push({url:fileName,title:title,date:new Date().toLocaleDateString()});
+  saveAndRender();
+});
+
+document.addEventListener('click',()=>{ document.querySelectorAll('.context-menu').forEach(m=>m.style.display='none'); currentMenu=null; });
+closeLightbox.addEventListener('click',()=>{ lightbox.style.display='none'; });
+
+renderPhotos();
+</script>
 </body>
 </html>
